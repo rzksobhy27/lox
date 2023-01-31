@@ -36,10 +36,10 @@ class Tokens(Enum):
     RIGHT_BRACE = auto()
     COMMA = auto()
     DOT = auto()
-    MINUS = auto()
     PLUS = auto()
-    SLASH = auto()
+    MINUS = auto()
     STAR = auto()
+    SLASH = auto()
 
     # 1-2 char tokens
     EQUAL = auto()
@@ -149,3 +149,41 @@ These are the `Scanner` method we will pretty much need
 ```
 
 and that is it this all we will need to implement our `Scanner`
+
+### ⇁ The `Scan` method
+The scan method is not scary at all it will just check if `token` matches one of our `Tokens`
+
+- First we will 1 character tokens
+```python
+    def scan(self):
+        while not self.isAtEnd():
+            # Get the token
+            token = self.next()
+
+            if token == "(":
+                yield self.createToken(Tokens.LEFT_PAREN)
+            elif token == ")":
+                yield self.createToken(Tokens.RIGHT_PAREN)
+            elif token == "{":
+                yield self.createToken(Tokens.LEFT_BRACE)
+            elif token == "}":
+                yield self.createToken(Tokens.RIGHT_BRACE)
+            elif token == ",":
+                yield self.createToken(Tokens.COMMA)
+            elif token == ".":
+                yield self.createToken(Tokens.DOT)
+            elif token == "+":
+                yield self.createToken(Tokens.PLUS)
+            elif token == "-":
+                yield self.createToken(Tokens.MINUS)
+            elif token == "*":
+                yield self.createToken(Tokens.STAR)
+            elif token == "/":
+                yield self.createToken(Tokens.SLASH)
+            else:
+                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
+```
+
+> you can create a list before the loop and keep appending the **Tokens** as you go I used `yield` because I just like it that is not for any technical reason
+
+
