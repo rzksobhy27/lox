@@ -9,7 +9,9 @@ it is not that hard pretty much a switch statement
 
 # ⇁ Structures 
 
-- We will need our `Tokens` enum which lists all of our possible tokens
+### ⇁ **Tokens** enum
+
+`Tokens` enum lists all of our possible tokens including
 
 ```python
 from enum import Enum, auto
@@ -54,9 +56,8 @@ class Tokens(Enum):
     FALSE = auto()
 ```
 
-> These are our tokens for now we may add more tokens in the future
+### ⇁ `Token` class
 
-- and of course our `Token` class
 ```python
 from typing import Union
 from dataclasses import dataclass
@@ -68,7 +69,7 @@ class Token:
     literal: Union[str, float, None]
 ```
 
-- and our `Scanner` class which will scan our code
+### ⇁ the `Scanner` class
 
 ```python
 class Scanner:
@@ -77,67 +78,40 @@ class Scanner:
         self.idx = 0
         self.line = 1
 
+    def createToken(self, token, literal=None):
+        return Token(token, self.line, literal)
+
     def isAtEnd(self):
         return self.idx >= len(self.source)
 
-    def scan(self):
-        while not self.isAtEnd():
-            pass
-```
-
-> we don't always scan on character at a time some times our token is more than one like `==` or a string literal like `"foo"` this is why we can't just iterate over `source` and we need to keep track of current index ourselves
-
-> For error reporing we also keep track of current line in source file
-
-
-# ⇁ the Scanner methods
-These are the `Scanner` method we will pretty much need
-
-- The `next()` function increments `self.idx` and give us the current character
-
-```python
-    def isAtEnd(self):
-        return self.idx >= len(self.source)
-
+    # increments `self.idx` and returns current character
     def next(self):
+        if self.isAtEnd():
+            return "\0"
+
         current = self.idx
         self.idx += 1
         return self.source[current]
 
-    def scan(self):
-```
-
-- We will also need the `peek()` function which give us the current character with out incrementing `self.idx`
-
-```python
-    def next(self):
-        current = self.idx
-        self.idx += 1
-        return self.source[current]
-
+    # returns current character but doesn't increment `self.idx`
     def peek(self):
         if self.isAtEnd():
             return "\0"
 
         return self.source[self.idx]
 
+    # our `scan` method
     def scan(self):
+        while not self.isAtEnd():
+            assert False, "not implemented"
 ```
 
-- every time we will need return a `Token` we will need to create an instance of it this gets annoying specially with tha fact that only **Literals** will take a value for the `Literal` field this is why we will create the `createToken` method which will automatically use `self.line` as a value for the `line` field and also has a default value for `Literal`
+> we don't always scan on character at a time some times our token is more than one like `==` or a string literal like `"foo"` this is why we can't just iterate over `source` instead we keep track of current `idx` ourselves
 
-```python
-    def createToken(self, token, literal = None):
-        return Token(token, self.line, literal)
-
-    def next(self):
-        current = self.idx
-```
-
-and that is it this all we will need to implement our `Scanner`
+> For error reporing we also keep track of current line in source file
 
 # ⇁ The `Scan` method
-The scan method is not scary at all it will just check if `token` matches one of our `Tokens`
+The scan method is not scary at all it just checks if `token` matches one of the tokens in `Token`
 
 ### ⇁ 1 character tokens
 ```python
@@ -177,23 +151,13 @@ The scan method is not scary at all it will just check if `token` matches one of
                 print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
 ```
 
-> you can create a list before the loop and keep appending the **Tokens** as you go I used `yield` because I just like it that is not for any technical reason
-
-
-
 ### ⇁ 1-2 character tokens 
 
-for this we will need one more method to add how ever to do this we will need one more method the `match()` method which will check if the next character is what we expect if it is it returns `True` and consumes that character if it's not it will return `False` and will not consumes the next character
-
-> I added the "\0" check just in case something goes wrong
+for this we will need one more method to add how ever to do this we will need one more method the `match()` method which will check if the next character is what we expect to be
+- if it is then it consumes that character and returns `True`
+- if it isn't then it just returns `False`
 
 ``` python
-    def peek(self):
-        if self.isAtEnd():
-            return "\0"
-
-        return self.source[self.idx]
-
     def match(self, expected):
         if self.peek() != expected:
             return False
@@ -206,8 +170,6 @@ for this we will need one more method to add how ever to do this we will need on
 now we can scan 1-2 char tokens
 
 ```python
-            elif token == "*":
-                yield self.createToken(Tokens.STAR)
             elif token == "/":
                 yield self.createToken(Tokens.SLASH)
             elif token == "=":
@@ -218,29 +180,20 @@ now we can scan 1-2 char tokens
                 yield self.createToken(Tokens.GREATER_EQUAL if self.match("=") else Tokens.GREATER)
             elif token == "<":
                 yield self.createToken(Tokens.LESS_EQUAL if self.match("=") else Tokens.LESS)
-            else:
-                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
+            elif token == " " or token == "\t" or token == "\r":
 ```
 
-and that is it we can now scan 1-2 char tokens couldn't be easier
+### ⇁ string literals
 
-
-
-### ⇁ strings
-
-strings are usually the characters between the staring and enclosing **"** mark
+strings are usually the characters between the staring and enclosing `"` mark
 
 ```python
-            elif token == "<":
-                yield self.createToken(Tokens.LESS_EQUAL if self.match("=") else Tokens.LESS)
             elif token == '"':
                 string = self.string()
                 yield self.createToken(Tokens.STRING, string)
-            else:
-                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
 ```
 
-to keep our code clean we will use the `string()` method which will consume all characters between the staring and enclosing **"** mark and returns it
+to keep our code clean we will use the `string()` method which will consume all characters between the staring and enclosing `"` mark and return the string
 
 ```python
         # consume the character
@@ -263,9 +216,9 @@ to keep our code clean we will use the `string()` method which will consume all 
         return string
 ```
 
-### ⇁ numbers
+### ⇁ number literals
 
-all scans in our languages are floats at runtime
+all numbers in our languages are floats at runtime
 
 ```python
             elif token = '"':
@@ -274,8 +227,6 @@ all scans in our languages are floats at runtime
             elif token.isdigit():
                 number = self.number()
                 yield self.createToken(Tokens.NUMBER, number)
-            else:
-                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
 ```
 
 and our `number()` method
@@ -312,10 +263,10 @@ and our `number()` method
 
 ### ⇁ identifiers and keywords
 
-identifiers and keywords need some special way to deal with because a word might be a builtin **keyword** or just a normal identifier
+identifiers and keywords need some special treatment because a word might be a builtin **keyword** or just a normal **identifier**
 
 the way we will do it is very simple
-- first we will check the whole word
+- first we will scan the whole word
 - then we will match the result with our list of keywords
 - if it exists we will return a keyword token
 - else we will return an identifier literal
@@ -350,10 +301,10 @@ and our `identifier()` method
         identifier = "".join(identifier)
 ```
 
-until here we parsed the word we still need to check if this word is a keyword or not
-the way we will do it is by creating a python dictionary where keys will be the keyword we want and the value is the keyword enum value in `Tokens`
+and like that we scanned the **word**<br />
 
-the dictionary
+to check if the **word** is a keywords we will create a python dictionary of key, value pairs where **key** is the keyword literal and **value** is the keyword value in our `Tokens` Enum
+
 ```python
 keywords = {
     "or": Tokens.OR,
@@ -383,20 +334,19 @@ and now going to out `identifier()` method
         identifier = "".join(identifier)
 
         keyword = keywords.get(identifier)
-        if keyword  != None:
+        if keyword != None:
             return self.createToken(keyword)
         else:
             return self.createToken(Tokens.IDENTIFIER, identifier)
 ```
 
 # ⇁ Testing the scanner
+
 now our scanner is complete lets test it out
 
 we will create an file say **example.lox**
 
-- The first thing we will need to do is to read source file That is not hard to do in python
-
-```txt
+```
 ({})
 + - * /
 = ==
@@ -407,6 +357,8 @@ we will create an file say **example.lox**
 or and
 bar
 ```
+
+- The first thing we will need to do is to read source file That is not hard to do in python
 
 ```python
 path = "./example.lox"
@@ -419,6 +371,7 @@ file.close()
 ```
 
 - and now we Scan it
+
 ```python
 # we need list source characters
 # because our scanner takes list[str]

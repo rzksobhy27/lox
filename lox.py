@@ -214,7 +214,6 @@ class Scanner:
                     "[ERROR] unexpected token `{}` at line {}".format(token, self.line)
                 )
 
-
 if __name__ == "__main__":
     argv = sys.argv
 
