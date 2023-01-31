@@ -7,9 +7,7 @@ The scanner takes source code list of characters and transforms it into a higher
 
 it is not that hard pretty much a switch statement
 
-# ⇁ the code
-
-### ⇁ Structures 
+# ⇁ Structures 
 
 - We will need our `Tokens` enum which lists all of our possible tokens
 
@@ -92,7 +90,7 @@ class Scanner:
 > For error reporing we also keep track of current line in source file
 
 
-### ⇁ the Scanner methods
+# ⇁ the Scanner methods
 These are the `Scanner` method we will pretty much need
 
 - The `next()` function increments `self.idx` and give us the current character
@@ -138,10 +136,10 @@ These are the `Scanner` method we will pretty much need
 
 and that is it this all we will need to implement our `Scanner`
 
-### ⇁ The `Scan` method
+# ⇁ The `Scan` method
 The scan method is not scary at all it will just check if `token` matches one of our `Tokens`
 
-- First we will scan 1 character tokens
+### ⇁ 1 character tokens
 ```python
     def scan(self):
         while not self.isAtEnd():
@@ -181,7 +179,11 @@ The scan method is not scary at all it will just check if `token` matches one of
 
 > you can create a list before the loop and keep appending the **Tokens** as you go I used `yield` because I just like it that is not for any technical reason
 
-- Next we will scan 1-2 character tokens for this we will need one more method to add how ever to do this we will need one more method the `match()` method which will check if the next character is what we expect if it is it returns `True` and consumes that character if it's not it will return `False` and will not consumes the next character
+
+
+### ⇁ 1-2 character tokens 
+
+for this we will need one more method to add how ever to do this we will need one more method the `match()` method which will check if the next character is what we expect if it is it returns `True` and consumes that character if it's not it will return `False` and will not consumes the next character
 
 > I added the "\0" check just in case something goes wrong
 
@@ -222,7 +224,11 @@ now we can scan 1-2 char tokens
 
 and that is it we can now scan 1-2 char tokens couldn't be easier
 
-- next we will scan **strings** strings are usually the characters between the staring and enclosing **"** mark
+
+
+### ⇁ strings
+
+strings are usually the characters between the staring and enclosing **"** mark
 
 ```python
             elif token == "<":
@@ -257,7 +263,9 @@ to keep our code clean we will use the `string()` method which will consume all 
         return string
 ```
 
-- and now we will scan numbers all scans in our languages are floats at runtime
+### ⇁ numbers
+
+all scans in our languages are floats at runtime
 
 ```python
             elif token = '"':
@@ -302,7 +310,9 @@ and our `number()` method
         return number
 ```
 
-- **identifiers** identifiers need some special way to deal with because a work might be a builtin **keyword** or just a normal identifier
+### ⇁ identifiers and keywords
+
+identifiers and keywords need some special way to deal with because a word might be a builtin **keyword** or just a normal identifier
 
 the way we will do it is very simple
 - first we will check the whole word

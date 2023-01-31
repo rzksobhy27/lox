@@ -45,6 +45,7 @@ class Tokens(Enum):
     TRUE = auto()
     FALSE = auto()
 
+
 keywords = {
     "or": Tokens.OR,
     "and": Tokens.AND,
@@ -54,8 +55,9 @@ keywords = {
     "function": Tokens.FUNCTION,
     "nil": Tokens.NIL,
     "true": Tokens.TRUE,
-    "false": Tokens.FALSE
+    "false": Tokens.FALSE,
 }
+
 
 @dataclass
 class Token:
@@ -110,7 +112,6 @@ class Scanner:
 
         return string
 
-    
     def number(self):
         start = self.idx - 1
 
@@ -144,12 +145,12 @@ class Scanner:
         identifier = "".join(identifier)
 
         keyword = keywords.get(identifier)
-        if keyword  != None:
+        if keyword != None:
             return self.createToken(keyword)
         else:
             return self.createToken(Tokens.IDENTIFIER, identifier)
 
-    def createToken(self, token, literal = None):
+    def createToken(self, token, literal=None):
         return Token(token, self.line, literal)
 
     def scan(self):
@@ -178,13 +179,21 @@ class Scanner:
             elif token == "/":
                 yield self.createToken(Tokens.SLASH)
             elif token == "=":
-                yield self.createToken(Tokens.EQUAL_EQUAL if self.match("=") else Tokens.EQUAL)
+                yield self.createToken(
+                    Tokens.EQUAL_EQUAL if self.match("=") else Tokens.EQUAL
+                )
             elif token == "!":
-                yield self.createToken(Tokens.BANG_EQUAL if self.match("=") else Tokens.BANG)
+                yield self.createToken(
+                    Tokens.BANG_EQUAL if self.match("=") else Tokens.BANG
+                )
             elif token == ">":
-                yield self.createToken(Tokens.GREATER_EQUAL if self.match("=") else Tokens.GREATER)
+                yield self.createToken(
+                    Tokens.GREATER_EQUAL if self.match("=") else Tokens.GREATER
+                )
             elif token == "<":
-                yield self.createToken(Tokens.LESS_EQUAL if self.match("=") else Tokens.LESS)
+                yield self.createToken(
+                    Tokens.LESS_EQUAL if self.match("=") else Tokens.LESS
+                )
             elif token == '"':
                 string = self.string()
                 yield self.createToken(Tokens.STRING, string)
@@ -201,7 +210,10 @@ class Scanner:
             elif token == "\0":
                 break
             else:
-                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
+                print(
+                    "[ERROR] unexpected token `{}` at line {}".format(token, self.line)
+                )
+
 
 if __name__ == "__main__":
     argv = sys.argv
@@ -221,4 +233,8 @@ if __name__ == "__main__":
 
     scanner = Scanner(source)
     for token in scanner.scan():
-        print("Token: {}, literal: {}, line: {}".format(token.token, token.literal, token.line))
+        print(
+            "Token: {}, literal: {}, line: {}".format(
+                token.token, token.literal, token.line
+            )
+        )
