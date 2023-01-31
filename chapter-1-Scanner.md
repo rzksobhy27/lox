@@ -9,18 +9,6 @@ it is not that hard pretty much a switch statement
 
 # ⇁ the code
 
-- The first thing we will need to do is to read source file That is not hard to do in python
-
-```python
-path = "./example.lox"
-file = open(path, "r")
-
-# Reading source file
-source = file.read()
-
-file.close()
-```
-
 ### ⇁ Structures 
 
 - We will need our `Tokens` enum which lists all of our possible tokens
@@ -313,3 +301,152 @@ and our `number()` method
 
         return number
 ```
+
+- **identifiers** identifiers need some special way to deal with because a work might be a builtin **keyword** or just a normal identifier
+
+the way we will do it is very simple
+- first we will check the whole word
+- then we will match the result with our list of keywords
+- if it exists we will return a keyword token
+- else we will return an identifier literal
+
+```python
+                yield self.createToken(Tokens.STRING, string)
+            elif token.isdigit():
+                number = self.number()
+                yield self.createToken(Tokens.NUMBER, number)
+            elif token.isalpha():
+                yield self.identifier()
+            else:
+                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
+```
+
+and our `identifier()` method
+
+```python
+        number = float(number)
+
+        return number
+
+    def identifier(self):
+        start = self.idx - 1
+
+        while self.peek().isalpha() or self.peek().isdigit():
+            self.next()
+
+        end = self.idx
+
+        identifier = self.source[start:end]
+        identifier = "".join(identifier)
+```
+
+until here we parsed the word we still need to check if this word is a keyword or not
+the way we will do it is by creating a python dictionary where keys will be the keyword we want and the value is the keyword enum value in `Tokens`
+
+the dictionary
+```python
+keywords = {
+    "or": Tokens.OR,
+    "and": Tokens.AND,
+    "if": Tokens.IF,
+    "else": Tokens.ELSE,
+    "var": Tokens.VAR,
+    "function": Tokens.FUNCTION,
+    "nil": Tokens.NIL,
+    "true": Tokens.TRUE,
+    "false": Tokens.FALSE
+}
+```
+
+and now going to out `identifier()` method
+
+```python
+    def identifier(self):
+        start = self.idx - 1
+
+        while self.peek().isalpha() or self.peek().isdigit():
+            self.next()
+
+        end = self.idx
+
+        identifier = self.source[start:end]
+        identifier = "".join(identifier)
+
+        keyword = keywords.get(identifier)
+        if keyword  != None:
+            return self.createToken(keyword)
+        else:
+            return self.createToken(Tokens.IDENTIFIER, identifier)
+```
+
+# ⇁ Testing the scanner
+now our scanner is complete lets test it out
+
+we will create an file say **example.lox**
+
+- The first thing we will need to do is to read source file That is not hard to do in python
+
+```txt
+({})
++ - * /
+= ==
+! !=
+> >=
+< <=
+"foo" 123.5
+or and
+bar
+```
+
+```python
+path = "./example.lox"
+file = open(path, "r")
+
+# Reading source file
+source = file.read()
+
+file.close()
+```
+
+- and now we Scan it
+```python
+# we need list source characters
+# because our scanner takes list[str]
+scanner = Scanner(list(source))
+
+# and we print it
+for token in scanner.scan():
+    print("Token: {}, literal: {}, line: {}".format(token.token, token.literal, token.line))
+```
+
+the result should be something like
+```txt
+Token: Tokens.LEFT_PAREN, literal: None, line: 1
+Token: Tokens.LEFT_BRACE, literal: None, line: 1
+Token: Tokens.RIGHT_BRACE, literal: None, line: 1
+Token: Tokens.RIGHT_PAREN, literal: None, line: 1
+Token: Tokens.PLUS, literal: None, line: 2
+Token: Tokens.MINUS, literal: None, line: 2
+Token: Tokens.STAR, literal: None, line: 2
+Token: Tokens.SLASH, literal: None, line: 2
+Token: Tokens.EQUAL, literal: None, line: 3
+Token: Tokens.EQUAL_EQUAL, literal: None, line: 3
+Token: Tokens.BANG, literal: None, line: 4
+Token: Tokens.BANG_EQUAL, literal: None, line: 4
+Token: Tokens.GREATER, literal: None, line: 5
+Token: Tokens.GREATER_EQUAL, literal: None, line: 5
+Token: Tokens.LESS, literal: None, line: 6
+Token: Tokens.LESS_EQUAL, literal: None, line: 6
+Token: Tokens.STRING, literal: foo, line: 7
+Token: Tokens.NUMBER, literal: 123.5, line: 7
+Token: Tokens.OR, literal: None, line: 8
+Token: Tokens.AND, literal: None, line: 8
+Token: Tokens.IDENTIFIER, literal: bar, line: 9
+```
+
+and that is pretty much it now we can
+- Scan tokens like `>`, `!=`, `+`
+- Strings like `"foo"`
+- numbers like `123.4`
+- identifiers
+- and finally keywords like `or`, `else`

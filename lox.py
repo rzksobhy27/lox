@@ -34,6 +34,28 @@ class Tokens(Enum):
     STRING = auto()
     NUMBER = auto()
 
+    # Keywords
+    OR = auto()
+    AND = auto()
+    IF = auto()
+    ELSE = auto()
+    VAR = auto()
+    FUNCTION = auto()
+    NIL = auto()
+    TRUE = auto()
+    FALSE = auto()
+
+keywords = {
+    "or": Tokens.OR,
+    "and": Tokens.AND,
+    "if": Tokens.IF,
+    "else": Tokens.ELSE,
+    "var": Tokens.VAR,
+    "function": Tokens.FUNCTION,
+    "nil": Tokens.NIL,
+    "true": Tokens.TRUE,
+    "false": Tokens.FALSE
+}
 
 @dataclass
 class Token:
@@ -110,6 +132,23 @@ class Scanner:
 
         return number
 
+    def identifier(self):
+        start = self.idx - 1
+
+        while self.peek().isalpha() or self.peek().isdigit():
+            self.next()
+
+        end = self.idx
+
+        identifier = self.source[start:end]
+        identifier = "".join(identifier)
+
+        keyword = keywords.get(identifier)
+        if keyword  != None:
+            return self.createToken(keyword)
+        else:
+            return self.createToken(Tokens.IDENTIFIER, identifier)
+
     def createToken(self, token, literal = None):
         return Token(token, self.line, literal)
 
@@ -152,6 +191,8 @@ class Scanner:
             elif token.isdigit():
                 number = self.number()
                 yield self.createToken(Tokens.NUMBER, number)
+            elif token.isalpha():
+                yield self.identifier()
             elif token == " " or token == "\t" or token == "\r":
                 # ignore some characters
                 pass
