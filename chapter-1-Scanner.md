@@ -92,7 +92,7 @@ class Scanner:
         self.line = 1
 
     def isAtEnd(self):
-        return self.current >= len(self.source)
+        return self.idx >= len(self.source)
 
     def scan(self):
         while not self.isAtEnd():
@@ -104,14 +104,14 @@ class Scanner:
 > For error reporing we also keep track of current line in source file
 
 
-### ⇁ Our tools
+### ⇁ the Scanner methods
 These are the `Scanner` method we will pretty much need
 
 - The `next()` function increments `self.idx` and give us the current character
 
 ```python
     def isAtEnd(self):
-        return self.current >= len(self.source)
+        return self.idx >= len(self.source)
 
     def next(self):
         current = self.idx
@@ -153,7 +153,7 @@ and that is it this all we will need to implement our `Scanner`
 ### ⇁ The `Scan` method
 The scan method is not scary at all it will just check if `token` matches one of our `Tokens`
 
-- First we will 1 character tokens
+- First we will scan 1 character tokens
 ```python
     def scan(self):
         while not self.isAtEnd():
@@ -180,10 +180,136 @@ The scan method is not scary at all it will just check if `token` matches one of
                 yield self.createToken(Tokens.STAR)
             elif token == "/":
                 yield self.createToken(Tokens.SLASH)
+            elif token == " " or token == "\t" or token == "\r":
+                # ignore some characters
+                pass
+            elif token == "\n":
+                self.line += 1
+            elif token == "\0":
+                break
             else:
                 print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
 ```
 
 > you can create a list before the loop and keep appending the **Tokens** as you go I used `yield` because I just like it that is not for any technical reason
 
+- Next we will scan 1-2 character tokens for this we will need one more method to add how ever to do this we will need one more method the `match()` method which will check if the next character is what we expect if it is it returns `True` and consumes that character if it's not it will return `False` and will not consumes the next character
 
+> I added the "\0" check just in case something goes wrong
+
+``` python
+    def peek(self):
+        if self.isAtEnd():
+            return "\0"
+
+        return self.source[self.idx]
+
+    def match(self, expected):
+        if self.peek() != expected:
+            return False
+
+        # consume the character
+        self.next()
+        return True
+```
+
+now we can scan 1-2 char tokens
+
+```python
+            elif token == "*":
+                yield self.createToken(Tokens.STAR)
+            elif token == "/":
+                yield self.createToken(Tokens.SLASH)
+            elif token == "=":
+                yield self.createToken(Tokens.EQUAL_EQUAL if self.match("=") else Tokens.EQUAL)
+            elif token == "!":
+                yield self.createToken(Tokens.BANG_EQUAL if self.match("=") else Tokens.BANG)
+            elif token == ">":
+                yield self.createToken(Tokens.GREATER_EQUAL if self.match("=") else Tokens.GREATER)
+            elif token == "<":
+                yield self.createToken(Tokens.LESS_EQUAL if self.match("=") else Tokens.LESS)
+            else:
+                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
+```
+
+and that is it we can now scan 1-2 char tokens couldn't be easier
+
+- next we will scan **strings** strings are usually the characters between the staring and enclosing **"** mark
+
+```python
+            elif token == "<":
+                yield self.createToken(Tokens.LESS_EQUAL if self.match("=") else Tokens.LESS)
+            elif token == '"':
+                string = self.string()
+                yield self.createToken(Tokens.STRING, string)
+            else:
+                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
+```
+
+to keep our code clean we will use the `string()` method which will consume all characters between the staring and enclosing **"** mark and returns it
+
+```python
+        # consume the character
+        self.next()
+        return True
+
+    def string(self):
+        start = self.idx
+
+        while self.next() != '"':
+            if self.peek() == "\n":
+                print("[ERROR] unterminated string at line %i" % self.line)
+                sys.exit(1)
+
+        end = self.idx - 1
+
+        string = self.source[start:end]
+        string = "".join(string)
+
+        return string
+```
+
+- and now we will scan numbers all scans in our languages are floats at runtime
+
+```python
+            elif token = '"':
+                string = self.string()
+                yield self.createToken(Tokens.STRING, string)
+            elif token.isdigit():
+                number = self.number()
+                yield self.createToken(Tokens.NUMBER, number)
+            else:
+                print("[ERROR] unexpected token `{}` at line {}".format(token, self.line))
+```
+
+and our `number()` method
+
+```python
+        string = self.source[start:end]
+        string = "".join(string)
+
+        return string
+
+
+    def number(self):
+        # get the number consumed on the main loop
+        start = self.idx - 1
+
+        while self.peek().isdigit():
+            self.next()
+
+        if self.peek() == ".":
+            # consume the `.`
+            self.next()
+
+            while self.peek().isdigit():
+                self.next()
+
+        end = self.idx
+
+        number = self.source[start:end]
+        number = "".join(number)
+        number = float(number)
+
+        return number
+```
