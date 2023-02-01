@@ -1,4 +1,4 @@
-# Scanning
+# ⇁ Scanning
 
 The first step in any compiler or interpreter is scanning
 The scanner takes source code list of characters and transforms it into a higher level format as a list of **tokens**

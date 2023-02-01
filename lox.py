@@ -6,6 +6,13 @@ from dataclasses import dataclass
 from typing import Union
 
 
+def isalpha(char):
+    if char.isalpha() or char == "_":
+        return True
+
+    return False
+
+
 class Tokens(Enum):
     # 1 char tokens
     LEFT_PAREN = auto()
@@ -136,7 +143,7 @@ class Scanner:
     def identifier(self):
         start = self.idx - 1
 
-        while self.peek().isalpha() or self.peek().isdigit():
+        while isalpha(self.peek()) or self.peek().isdigit():
             self.next()
 
         end = self.idx
@@ -200,7 +207,7 @@ class Scanner:
             elif token.isdigit():
                 number = self.number()
                 yield self.createToken(Tokens.NUMBER, number)
-            elif token.isalpha():
+            elif isalpha(token):
                 yield self.identifier()
             elif token == " " or token == "\t" or token == "\r":
                 # ignore some characters
@@ -213,6 +220,23 @@ class Scanner:
                 print(
                     "[ERROR] unexpected token `{}` at line {}".format(token, self.line)
                 )
+
+
+class Expr:
+    def accept(self):
+        assert False, "not implemented"
+
+
+class Binary(Expr):
+    def __init__(self, left, op, right):
+        self.left = left
+        self.op = op
+        self.right = right
+
+
+class Parser:
+    pass
+
 
 if __name__ == "__main__":
     argv = sys.argv
